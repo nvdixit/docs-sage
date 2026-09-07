@@ -1,0 +1,127 @@
+================================================================================
+          CENTRAL IDENTITY & ACCESS MANAGEMENT (IAM) TEAM
+               OFFICIAL SSO APPLICATION ONBOARDING MANUAL
+================================================================================
+Document ID: IAM-SOP-2026-V2
+Published By: Central SSO Core Engineering & Operations Team
+Contact: #identity-onboarding | iam-support@ internal.company.com
+Effective Date: September 2026
+--------------------------------------------------------------------------------
+
+A note from the Central IAM Team:
+Welcome! We are thrilled to see your team building innovative products for our 
+company. As the central guardians of corporate identity and security, our 
+mission is to make authentication frictionless for your users while keeping our 
+perimeter impenetrable. 
+
+This guide outlines the exact, mandatory path your development team must follow 
+to integrate your application with **AuthForge**, our new enterprise-wide 
+Single Sign-On (SSO) and Identity Management platform. Please read this manual 
+carefully before writing any integration code.
+
+--------------------------------------------------------------------------------
+SECTION 1: THE ONBOARDING LIFECYCLE AT A GLANCE
+--------------------------------------------------------------------------------
+
+To ensure a smooth launch, every application must move through four structured 
+gates managed by our team:
+
+  [ Gate 1: Registration ] ---> [ Gate 2: Protocol Selection & Dev ]
+                                          |
+  [ Gate 4: Production Go-Live ] <--- [ Gate 3: Security & Staging Audit ]
+
+Do not attempt to bypass Gate 3. Applications lacking central security clearance 
+will have their client credentials automatically revoked by our perimeter gatekeepers.
+
+--------------------------------------------------------------------------------
+SECTION 2: GATE 1 — APPLICATION REGISTRATION
+--------------------------------------------------------------------------------
+
+Before touching any code, you must formally register your application in the 
+AuthForge Admin Console. This establishes your application's identity within 
+our ecosystem.
+
+1. Access the Console: 
+   Navigate to https://authforge.internal.company.com using your corporate SSO.
+2. Submit Application Metadata:
+   - Application Name: (e.g., "Customer Billing Portal")
+   - Owning Engineering Squad: (e.g., "Squad-Billing-Core")
+   - Primary Slack Contact Channel: (e.g., "#billing-alerts")
+   - Environment-specific Redirect URIs: Define strict callback endpoints. 
+     Wildcards are strictly prohibited in production URIs.
+
+Upon successful registration, our automated provisioning pipeline will assign 
+your application a unique Client ID and generate a cryptographically secure 
+Client Secret. Store this secret immediately in your team's vault (HashiCorp 
+Vault or AWS Secrets Manager). Never hardcode secrets in your source repository.
+
+--------------------------------------------------------------------------------
+SECTION 3: GATE 2 — PROTOCOL SELECTION & IMPLEMENTATION
+--------------------------------------------------------------------------------
+
+AuthForge supports two industry-standard protocols. Choose the one that fits 
+your architecture:
+
+OPTION A: OpenID Connect (OIDC) [RECOMMENDED]
+Best for modern web applications, Single Page Applications (SPAs), and mobile apps.
+- Issuer URL: https://authforge.internal.company.com/oauth/v1
+- Grant Types Supported: Authorization Code with PKCE (mandatory for SPAs/Mobile).
+
+OPTION B: SAML 2.0
+Best for legacy enterprise applications and pre-packaged third-party software.
+- IdP Entity ID: https://authforge.internal.company.com/saml/v1
+- Metadata XML: Downloadable directly from your AuthForge application dashboard.
+
+*Implementation Support:*
+We maintain official SDK wrappers and sample boilerplates for Node.js, Python, 
+Java, and Go. Visit our internal GitHub organization (`github.internal/iam-samples`) 
+before writing custom protocol parsers.
+
+--------------------------------------------------------------------------------
+SECTION 4: ROLE-BASED ACCESS CONTROL (RBAC) & CLAIMS MAPPING
+--------------------------------------------------------------------------------
+
+Your application should not manage its own user directory. Instead, trust 
+AuthForge to deliver user attributes and group memberships via ID tokens (OIDC) 
+or assertions (SAML).
+
+1. During registration, declare what groups or custom claims your app requires 
+   (e.g., `groups: ["finance-editors", "global-admins"]`).
+2. Map these claims inside your application middleware to protect routes or 
+   grant administrative privileges.
+3. If your application requires custom user attributes (e.g., Cost Center ID, 
+   Region Code), submit a ticket to our team to review data privacy compliance 
+   before requesting them in your scopes.
+
+--------------------------------------------------------------------------------
+SECTION 5: GATE 3 — STAGING INTEGRATION & SECURITY AUDIT
+--------------------------------------------------------------------------------
+
+Once your code is integrated, you must validate it in our Staging environment 
+(`authforge-staging.internal.company.com`) before requesting production access.
+
+Our security automated scanner and manual reviewers will inspect your app for:
+- Proper token validation and signature verification.
+- Secure handling of refresh tokens and logout endpoints (Single Logout / SLO).
+- Absence of exposed secrets in client-side bundles (especially for SPAs).
+
+Once your staging test suite passes and our automated compliance scan returns 
+"GREEN", you will be cleared for production deployment.
+
+--------------------------------------------------------------------------------
+SECTION 6: GATE 4 — PRODUCTION GO-LIVE & SUPPORT
+--------------------------------------------------------------------------------
+
+With Gate 3 cleared, our team will promote your application profile to the 
+Production AuthForge cluster. 
+
+Operational Support Model:
+- Standard Hours (Mon-Fri, 9 AM - 5 PM UTC): Reach out on Slack at `#identity-onboarding`.
+- Critical Production Outages (24/7): Page the Central IAM On-Call rotation via PagerDuty (`IAM-Core-Service`).
+
+We are excited to partner with your team to make authentication secure, scalable, 
+and seamless across the entire enterprise. Let's build securely!
+
+================================================================================
+                          END OF ONBOARDING MANUAL
+================================================================================

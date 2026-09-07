@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI: Internal Knowledge Assistant - Confluence</title>
+    <!-- Include Inter font and FontAwesome for Confluence-style UI icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --confluence-blue: #0052CC;
+            --confluence-dark: #172B4D;
+            --confluence-gray-bg: #F4F5F7;
+            --confluence-border: #DFE1E6;
+            --text-main: #333333;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            background-color: #ffffff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* --- Sidebar Navigation --- */
+        aside {
+            width: var(--sidebar-width);
+            background-color: var(--confluence-gray-bg);
+            border-right: 1px solid var(--confluence-border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-header {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--confluence-border);
+        }
+
+        .sidebar-header i {
+            color: var(--confluence-blue);
+            font-size: 20px;
+        }
+
+        .sidebar-header span {
+            font-weight: 700;
+            color: var(--confluence-dark);
+            font-size: 15px;
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px 12px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #505F79;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 4px;
+            transition: background 0.2s;
+        }
+
+        .sidebar-menu li:hover, .sidebar-menu li.active {
+            background-color: #EBECF0;
+            color: var(--confluence-blue);
+        }
+
+        /* --- Main Content Area --- */
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Confluence Top Header Bar */
+        .top-nav {
+            height: 56px;
+            border-bottom: 1px solid var(--confluence-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #505F79;
+            font-size: 13px;
+        }
+
+        .breadcrumbs span.current {
+            color: var(--confluence-dark);
+            font-weight: 600;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 13px;
+            border: 1px solid transparent;
+        }
+
+        .btn-secondary {
+            background: #F4F5F7;
+            color: var(--confluence-dark);
+            border-color: var(--confluence-border);
+        }
+
+        .btn-secondary:hover {
+            background: #EBECF0;
+        }
+
+        .btn-primary {
+            background: var(--confluence-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0043CE;
+        }
+
+        /* Document Canvas */
+        .doc-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 40px 80px 40px;
+            width: 100%;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--confluence-dark);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-metadata {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: #505F79;
+            font-size: 13px;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--confluence-border);
+            padding-bottom: 16px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #FF7452;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Content Styling */
+        h2 {
+            font-size: 20px;
+            color: var(--confluence-dark);
+            margin-top: 32px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        h3 {
+            font-size: 16px;
+            color: var(--confluence-dark);
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: #253858;
+        }
+
+        ul, ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: #253858;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Confluence Macro Boxes */
+        .macro-box {
+            border-radius: 4px;
+            padding: 16px;
+            margin: 20px 0;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .macro-info {
+            background-color: #DEEBFF;
+            border-left: 4px solid var(--confluence-blue);
+            color: #0747A6;
+        }
+
+        .macro-info i {
+            color: var(--confluence-blue);
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        .macro-note {
+            background-color: #FFFAE6;
+            border-left: 4px solid #FFAB00;
+            color: #172B4D;
+        }
+
+        .macro-note i {
+            color: #FFAB00;
+            font-size: 16px;
+            margin-top: 2px;
+        }
+
+        /* Tables */
+        table.confluence-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+
+        table.confluence-table th, table.confluence-table td {
+            border: 1px solid var(--confluence-border);
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        table.confluence-table th {
+            background-color: var(--confluence-gray-bg);
+            color: #505F79;
+            font-weight: 600;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #F4F5F7;
+            border: 1px solid var(--confluence-border);
+            border-radius: 4px;
+            padding: 16px;
+            font-family: SFMono-Medium, Settimo, Consolas, monospace;
+            font-size: 12px;
+            color: #172B4D;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-success { background: #E3FCEF; color: #006644; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside>
+        <div class="sidebar-header">
+            <i class="fa-brands"></i><span>Engineering Space</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><i class="fa-solid fa-house"></i> Home</li>
+            <li><i class="fa-solid fa-folder"></i> Architecture Specs</li>
+            <li class="active"><i class="fa-solid fa-file-lines"></i> NexusAI App Overview</li>
+            <li><i class="fa-solid fa-bug"></i> Bug Trackers & Logs</li>
+            <li><i class="fa-solid fa-users"></i> AI Platform Team</li>
+            <li><i class="fa-solid fa-shield-halved"></i> Data Security & Compliance</li>
+        </ul>
+    </aside>
+
+    <!-- Main Confluence Interface -->
+    <main>
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <div class="breadcrumbs">
+                <span>Engineering</span> / 
+                <span>AI Initiatives</span> / 
+                <span class="current">NexusAI Overview</span>
+            </div>
+            <div class="top-actions">
+                <button class="btn btn-secondary"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                <button class="btn btn-secondary"><i class="fa-solid fa-star"></i></button>
+                <button class="btn btn-primary"><i class="fa-solid fa-pen"></i> Edit</button>
+            </div>
+        </div>
+
+        <!-- Document Body -->
+        <div class="doc-container">
+            <h1 class="page-title">NexusAI: Internal Knowledge Assistant</h1>
+            
+            <div class="page-metadata">
+                <div class="user-badge">
+                    <div class="user-avatar">JD</div>
+                    <span>Jane Doe</span>
+                </div>
+                <span>Updated 2 days ago</span>
+                <span><span class="status-badge status-success">Production Ready</span></span>
+            </div>
+
+            <!-- Info Macro -->
+            <div class="macro-box macro-info">
+                <i class="fa-solid fa-circle-info"></i>
+                <div>
+                    <strong>Summary:</strong> NexusAI is our secure, enterprise-grade internal search and summarization tool. It runs completely air-gapped on our local workstations/servers utilizing <strong>Gemma 4 12B</strong> via a custom Retrieval-Augmented Generation (RAG) configuration.
+                </div>
+            </div>
+
+            <h2>1. System Architecture</h2>
+            <p>NexusAI avoids public cloud API vulnerabilities by maintaining zero data retention policies. The application leverages a locally orchestrated stack:</p>
+            <ul>
+                <li><strong>Base LLM:</strong> Google's open-weights <code>Gemma 4 12B-it</code> running locally through Ollama/vLLM.</li>
+                <li><strong>Vector Database:</strong> ChromaDB instance indexing company PDFs, internal Confluence markdown exports, and tech specs.</li>
+                <li><strong>Embedding Model:</strong> HuggingFace <code>all-MiniLM-L6-v2</code> running locally on CPU/GPU clusters.</li>
+            </ul>
+
+            <h2>2. Core Features</h2>
+            <table class="confluence-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Document Q&A</strong></td>
+                        <td>Allows engineering and product teams to query internal handbooks with zero risk of corporate data leakage.</td>
+                        <td><span class="status-badge status-success">Live</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Native Multimodal Ingestion</strong></td>
+                        <td>Leverages Gemma 4 12B's encoder-free architecture to process complex system architecture charts, design PDFs, and audio logs directly.</td>
+                        <td><span class="status-badge status-success">Live</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Extended Context Window</strong></td>
+                        <td>Utilizes a 256K context frame to ingest large codebases and massive technical whitepapers in a single retrieval step.</td>
+                        <td><span class="status-badge status-success">Live</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>3. Quick Start for Developers</h2>
+            <p>If you want to spin up your local development environment for NexusAI, clone the repository and run the setup script:</p>
+
+            <div class="code-block">
+# 1. Pull the required model locally via Ollama<br>
+ollama run gemma4:12b<br><br>
+# 2. Install repository dependencies<br>
+pip install -r requirements.txt<br><br>
+# 3. Initialize local vector database index<br>
+python scripts/ingest_docs.py --source ./internal_docs
+            </div>
+
+            <!-- Warning Macro -->
+            <div class="macro-box macro-note">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <div>
+                    <strong>Important Security Notice:</strong> Never paste customer PII or keys into any local prompt window unless explicitly approved by the InfoSec compliance board.
+                </div>
+            </div>
+
+            <h2>4. Frequently Asked Questions</h2>
+            <h3>Why did we choose Gemma 4 12B over larger 30B+ models?</h3>
+            <p>The 12B configuration hits the sweet spot for consumer/workstation hardware footprints while offering native reasoning, fast inference token-speeds, and local multimodal integration without separate auxiliary vision encoders.</p>
+            
+            <h3>Who do I contact for feature requests?</h3>
+            <p>Reach out via Slack at <code>#proj-nexus-ai</code> or message the core platform engineering owners.</p>
+        </div>
+    </main>
+
+</body>
+</html>
