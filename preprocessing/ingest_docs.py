@@ -4,7 +4,7 @@ from pathlib import Path
 from pypdf import PdfReader
 from docx import Document
 import ollama
-from pymongo import MongoClient, MongoClient
+from pymongo import MongoClient
 import time
 import base64
 
